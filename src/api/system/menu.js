@@ -16,11 +16,22 @@ export function childMenuList(parentId) {
   })
 }
 
-export function saveMenu(params) {
+export function saveMenu(data) {
   const url = '/menu/save'
   return request({
     url: url,
     method: 'post',
-    params
+    data
+  })
+}
+
+export function menuTree(parentId) {
+  let url = '/menu/treeList'
+  if (parentId) {
+    url += '?parentId=' + parentId
+  }
+  return request({
+    url: url,
+    method: 'get'
   })
 }
