@@ -119,7 +119,7 @@
 </template>
 
 <script>
-import { menuList, childMenuList } from '@/api/system/menu'
+import { menuList, childMenuList, saveMenu } from '@/api/system/menu'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
   name: 'menuComponent',
@@ -194,6 +194,7 @@ export default {
     },
     addMenu() {
       this.menu = {
+        id: '',
         title: '',
         name: '',
         path: '',
@@ -210,7 +211,24 @@ export default {
 
     },
     saveForm() {
-
+      this.$refs['form'].validate((valid, object) => {
+        if (!valid) {
+          this.$message({
+            message: '请完善相关信息填写！',
+            type: 'warning'
+          })
+        } else {
+          saveMenu(this.menu).then(res => {
+            if (res.code === 1) {
+              this.$message({
+                message: res.msg,
+                type: 'success'
+              })
+              this.dialogFormVisible = false
+            }
+          })
+        }
+      })
     }
   }
 }

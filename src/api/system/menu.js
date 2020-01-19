@@ -15,3 +15,12 @@ export function childMenuList(parentId) {
     method: 'get'
   })
 }
+
+export function saveMenu(params) {
+  const url = '/menu/save'
+  return request({
+    url: url,
+    method: 'post',
+    params
+  })
+}
