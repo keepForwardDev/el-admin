@@ -242,7 +242,6 @@ export default {
       // this.$refs['groupTree'].setChecked(row.parentId, true, false)
     },
     saveForm() {
-      console.info(this.$refs)
       this.$refs['form'].validate((valid, object) => {
         if (!valid) {
           this.$message({
