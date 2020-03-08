@@ -95,7 +95,7 @@ export const asyncRoutes = [
     children: [
       {
         path: 'menu',
-        component: () => import('@/views/system/menu'),
+        component: () => import('@/views/system/menu1'),
         name: 'menu',
         meta: { title: '菜单管理' }
       },
