@@ -6,7 +6,6 @@
           <div>
             <el-card class="box-card">
               <el-input v-model="search.name" clearable placeholder="请输入菜单名称" size="small" maxlength="10" style="width: 135px;" class="filter-item" />
-              <el-input v-model="search.name" clearable placeholder="请输入菜单名称" size="small" maxlength="10" style="width: 135px;" class="filter-item" />
               <el-button type="primary" class="filter-item" size="small">搜索</el-button>
             </el-card>
           </div>
@@ -106,6 +105,12 @@
         <el-form-item label="重定向地址">
           <el-input v-model="menu.redirect" />
         </el-form-item>
+        <el-form-item label="meta(icon)">
+          <el-input v-model="meta.icon" />
+        </el-form-item>
+        <el-form-item label="meta(activeMenu)">
+          <el-input v-model="meta.activeMenu" />
+        </el-form-item>
         <el-form-item label="是否隐藏">
           <el-switch
             v-model="menu.hidden"
@@ -118,6 +123,27 @@
             v-model="menu.alwaysShow"
             active-color="#13ce66"
             inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="meta(noCache)">
+          <el-switch
+                  v-model="menu.meta.noCache"
+                  active-color="#13ce66"
+                  inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="meta(affix)">
+          <el-switch
+                  v-model="menu.meta.affix"
+                  active-color="#13ce66"
+                  inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="meta(breadcrumb)">
+          <el-switch
+                  v-model="menu.meta.breadcrumb"
+                  active-color="#13ce66"
+                  inactive-color="#ff4949"
           />
         </el-form-item>
       </el-form>
@@ -157,7 +183,14 @@ export default {
         hidden: false,
         alwaysShow: false,
         redirect: '',
-        meta: {}
+        meta: {
+          title: '',
+          icon: '',
+          noCache: false,
+          affix: false,
+          breadcrumb: false,
+          activeMenu: ''
+        }
       },
       dialogTitle: '新增菜单',
       rules: {
@@ -219,7 +252,14 @@ export default {
         hidden: false,
         alwaysShow: false,
         redirect: '',
-        meta: {}
+        meta: {
+          title: '',
+          icon: '',
+          noCache: false,
+          affix: false,
+          breadcrumb: false,
+          activeMenu: ''
+        }
       }
       this.dialogFormVisible = true
     },
@@ -242,7 +282,6 @@ export default {
       // this.$refs['groupTree'].setChecked(row.parentId, true, false)
     },
     saveForm() {
-      console.info(this.$refs)
       this.$refs['form'].validate((valid, object) => {
         if (!valid) {
           this.$message({
