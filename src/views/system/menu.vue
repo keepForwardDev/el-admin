@@ -67,6 +67,7 @@
         >
           <template slot-scope="{row}">
             <el-button type="primary" size="small" @click="editMenu(row)">编辑</el-button>
+            <el-button type="danger" size="small" @click="deleteRow(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -106,10 +107,10 @@
           <el-input v-model="menu.redirect" />
         </el-form-item>
         <el-form-item label="meta(icon)">
-          <el-input v-model="meta.icon" />
+          <el-input v-model="menu.meta.icon" />
         </el-form-item>
         <el-form-item label="meta(activeMenu)">
-          <el-input v-model="meta.activeMenu" />
+          <el-input v-model="menu.meta.activeMenu" />
         </el-form-item>
         <el-form-item label="是否隐藏">
           <el-switch
@@ -156,7 +157,7 @@
 </template>
 
 <script>
-import { menuList, childMenuList, saveMenu, menuTree } from '@/api/system/menu'
+import { menuList, childMenuList, saveMenu, menuTree, deleteById } from '@/api/system/menu'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
   name: 'MenuComponent',
@@ -306,6 +307,22 @@ export default {
         if (res.code === 1) {
           this.treeList = res.data
         }
+      })
+    },
+    deleteRow(row) {
+      this.$confirm('此操作将永久删除该菜单，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteById(row.id).then(res => {
+          if (res.code === 1) {
+            this.$message({
+              type: 'success',
+              message: res.msg
+            })
+          }
+        })
       })
     }
   }

@@ -35,3 +35,11 @@ export function menuTree(parentId) {
     method: 'get'
   })
 }
+
+export function deleteById(ids) {
+  const url = '/menu/delete/' + ids
+  return request({
+    url: url,
+    method: 'get'
+  })
+}
