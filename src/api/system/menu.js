@@ -43,3 +43,11 @@ export function deleteById(ids) {
     method: 'get'
   })
 }
+
+export function menuInfo(id) {
+  const url = '/menu/info/' + id
+  return request({
+    url: url,
+    method: 'get'
+  })
+}

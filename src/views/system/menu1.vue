@@ -1,83 +1,85 @@
 <template>
   <div class="app-container">
+    <el-card class="box-card" style="bottom: 0">
     <div class="main-content">
+      <el-container>
+        <el-main>
+          <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteRow">删除</el-button>
+          <el-divider></el-divider>
+        </el-main>
+      </el-container>
       <el-container style="height: 800px">
-        <el-aside style="padding: 0;background: #fff;" width="asideWidth">
-          <el-menu
-            default-active="2"
-            class="el-menu-vertical-demo"
-            background-color="#545c64"
-            text-color="#fff"
-            active-text-color="#ffd04b"
-          >
-            <el-submenu index="1">
-              <template slot="title">
-                <i class="el-icon-location" />
-                <span>导航一</span>
-              </template>
-              <el-menu-item-group>
-                <template slot="title">分组一</template>
-                <el-menu-item index="1-1">选项1</el-menu-item>
-                <el-menu-item index="1-2">选项2</el-menu-item>
-              </el-menu-item-group>
-              <el-menu-item-group title="分组2">
-                <el-menu-item index="1-3">选项3</el-menu-item>
-              </el-menu-item-group>
-              <el-submenu index="1-4">
-                <template slot="title">选项4</template>
-                <el-menu-item index="1-4-1">选项1</el-menu-item>
+        <el-aside style="padding: 0;background: #fff;" :width="asideWidth">
+          <el-alert
+                  :closable="false"
+                  type="info"
+                  show-icon>
+            <p slot="title">当前选中的节点：{{selectName}}</p>
+          </el-alert>
+          <el-menu default-active="1-4-1" class="el-menu-vertical-demo" :collapse="collapse" @select="handleSelect">
+            <div v-for="firstLevel in treeList" :key="firstLevel.id">
+              <el-menu-item :index="firstLevel.id | toString" v-if="firstLevel.children.length == 0">{{firstLevel.label}}</el-menu-item>
+              <el-submenu :index="firstLevel.id | toString"  v-else>
+                <template slot="title">
+                  <i :class="firstLevel.extra" @click="handleSelect(firstLevel.id)"></i>
+                  <span @click="handleSelect(firstLevel.id)">{{firstLevel.label}}</span>
+                </template>
+                <div v-for="secondLevel in firstLevel.children" :key="secondLevel.id">
+                  <el-menu-item :index="secondLevel.id | toString" v-if="secondLevel.children.length == 0">{{secondLevel.label}}</el-menu-item>
+                  <el-submenu :index="secondLevel.id | toString" v-else>
+                    <template slot="title">
+                      <div @click="handleSelect(secondLevel.id)">
+                        <i :class="secondLevel.extra"></i>
+                        <span slot="title">{{secondLevel.label}}</span>
+                      </div>
+                    </template>
+                    <el-menu-item :index="thirdLevel.id | toString" v-for="thirdLevel in secondLevel.children" :key="thirdLevel.id">{{thirdLevel.label}}</el-menu-item>
+                  </el-submenu>
+                </div>
               </el-submenu>
-            </el-submenu>
-            <el-menu-item index="2">
-              <i class="el-icon-menu" />
-              <span slot="title">导航二</span>
-            </el-menu-item>
-            <el-menu-item index="3" disabled>
-              <i class="el-icon-document" />
-              <span slot="title">导航三</span>
-            </el-menu-item>
-            <el-menu-item index="4">
-              <i class="el-icon-setting" />
-              <span slot="title">导航四</span>
-            </el-menu-item>
+            </div>
           </el-menu>
         </el-aside>
 
         <el-main>
-          <el-form ref="form" :model="menu" label-width="auto" :rules="rules">
+          <el-form ref="form" :model="menu" label-width="120px" size="mini" :rules="rules">
             <el-form-item label="菜单名称" prop="title">
-              <el-input v-model="menu.title" />
+              <el-input v-model="menu.title" size="mini" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="路由名称" prop="name">
-              <el-input v-model="menu.name" />
+              <el-input v-model="menu.name" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="访问地址" prop="path">
-              <el-input v-model="menu.path" />
+              <el-input v-model="menu.path" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="组件地址" prop="component">
-              <el-input v-model="menu.component" />
+              <el-input v-model="menu.component" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="所属父级">
               <el-tree
+                accordion
+                check-strictly
+                :default-expanded-keys="expandedNode"
+                highlight-current
+                :style="{width: inputWidth}"
+                show-checkbox
                 ref="groupTree"
                 :data="treeList"
-                show-checkbox
                 node-key="id"
-                :default-expanded-keys="expandNode"
-                :default-checked-keys="checkedNode"
+                @check="checkChange"
               />
             </el-form-item>
             <el-form-item label="排序号">
-              <el-input v-model="menu.sort" type="number" />
+              <el-input v-model="menu.sort" type="number" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="重定向地址">
-              <el-input v-model="menu.redirect" />
+              <el-input v-model="menu.redirect" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="meta(icon)">
-              <el-input v-model="menu.meta.icon" />
+              <el-input v-model="menu.meta.icon" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="meta(activeMenu)">
-              <el-input v-model="menu.meta.activeMenu" />
+              <el-input v-model="menu.meta.activeMenu" :style="{width: inputWidth}"/>
             </el-form-item>
             <el-form-item label="">
               <el-checkbox v-model="menu.hidden" label="是否隐藏" border />
@@ -86,17 +88,20 @@
               <el-checkbox v-model="menu.meta.affix" label="meta(affix)" border />
               <el-checkbox v-model="menu.meta.breadcrumb" label="meta(breadcrumb)" border />
             </el-form-item>
-
+            <el-form-item label="">
+              <el-button type="primary" icon="el-icon-edit" @click="saveForm">保存</el-button>
+            </el-form-item>
           </el-form>
         </el-main>
 
       </el-container>
     </div>
+    </el-card>
   </div>
 </template>
 
 <script>
-import { menuList, childMenuList, saveMenu, menuTree, deleteById } from '@/api/system/menu'
+import { menuList, childMenuList, saveMenu, menuTree, deleteById, menuInfo } from '@/api/system/menu'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
   name: 'MenuComponent',
@@ -115,9 +120,11 @@ export default {
       list: [],
       dialogFormVisible: false,
       menu: {
-        title: '',
-        name: '',
+        id: '',
+        title: '', // 菜单名称
+        name: '', // 路由名称
         path: '',
+        parentId: 0,
         component: '',
         sort: 0,
         hidden: false,
@@ -140,8 +147,10 @@ export default {
         component: validNotNull()
       },
       treeList: [],
-      checkedNode: [],
-      expandNode: []
+      selectIndex: '',
+      selectName: '',
+      checkId: '',
+      expandedNode: []
     }
   },
   computed: {
@@ -153,14 +162,24 @@ export default {
     },
     asideWidth() {
       if (this.$store.state.app.device === 'mobile') {
-        return '60px'
+        return '65px'
       }
       return '250px'
+    },
+    inputWidth() {
+      if (this.$store.state.app.device === 'mobile') {
+        return 'auto'
+      }
+      return '300px'
+    }
+  },
+  filters: {
+    toString(val) {
+      return '' + val
     }
   },
   created() {
-    this.getList()
-    this.menuList()
+    this.menuTreeList()
   },
   methods: {
     getList() {
@@ -223,7 +242,6 @@ export default {
         meta: row.meta
       }
       this.dialogFormVisible = true
-      this.checkedNode = [row.parentId]
       // this.$refs['groupTree'].setChecked(row.parentId, true, false)
     },
     saveForm() {
@@ -246,20 +264,27 @@ export default {
         }
       })
     },
-    menuList() {
+    menuTreeList() {
       menuTree().then(res => {
         if (res.code === 1) {
           this.treeList = res.data
         }
       })
     },
-    deleteRow(row) {
+    deleteRow() {
+      if (!this.selectIndex) {
+        this.$message({
+          type: 'warning',
+          message: '请先选择一个删除的菜单！'
+        })
+        return
+      }
       this.$confirm('此操作将永久删除该菜单，是否继续？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteById(row.id).then(res => {
+        deleteById(this.selectIndex).then(res => {
           if (res.code === 1) {
             this.$message({
               type: 'success',
@@ -268,12 +293,58 @@ export default {
           }
         })
       })
+    },
+    handleSelect(index) {
+      this.selectIndex = index
+      menuInfo(index).then(res => {
+        if (res.code === 1) {
+          const row = res.data
+          this.menu = {
+            id: row.id,
+            title: row.title,
+            name: row.name,
+            path: row.path,
+            parentId: row.parentId,
+            component: row.component,
+            sort: row.sort,
+            hidden: row.hidden,
+            alwaysShow: row.alwaysShow,
+            redirect: row.redirect,
+            meta: row.meta
+          }
+          this.selectName = row.title
+          if (this.checkId) {
+            this.$refs['groupTree'].setChecked(this.checkId, false, false)
+          }
+          if (row.parentId) {
+            this.checkId = row.parentId
+            this.$refs['groupTree'].setChecked(this.checkId, true, false)
+            this.expandedNode = [row.parentId]
+          }
+        }
+      })
+    },
+    checkChange(v1, v2, v3, v4) {
+      if (this.checkId) {
+        this.$refs['groupTree'].setChecked(this.checkId, false, false)
+      }
+      if (v2.checkedKeys.length > 0) {
+        this.checkId = v1.id
+        this.menu.parentId = v1.id
+      } else {
+        this.checkId = 0
+        this.menu.parentId = 0
+      }
     }
   }
 }
 </script>
 <style scoped>
-  .el-card {
-    border: 0
+  .el-card__body {
+    padding: 10px;
+  }
+
+  .el-checkbox.is-bordered+.el-checkbox.is-bordered {
+    margin-left: 0;
   }
 </style>
