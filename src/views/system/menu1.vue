@@ -14,7 +14,7 @@
                   :closable="false"
                   type="info"
                   show-icon>
-            <p slot="title">当前选中的节点：{{selectName}}</p>
+            <p slot="title">当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></p>
           </el-alert>
           <el-menu default-active="1-4-1" class="el-menu-vertical-demo" :collapse="collapse" @select="handleSelect">
             <div v-for="firstLevel in treeList" :key="firstLevel.id">
@@ -90,6 +90,7 @@
             </el-form-item>
             <el-form-item label="">
               <el-button type="primary" icon="el-icon-edit" @click="saveForm">保存</el-button>
+              <el-button  @click="clearForm">重置</el-button>
             </el-form-item>
           </el-form>
         </el-main>
@@ -147,7 +148,7 @@ export default {
         component: validNotNull()
       },
       treeList: [],
-      selectIndex: '',
+      selectId: '',
       selectName: '',
       checkId: '',
       expandedNode: []
@@ -264,6 +265,35 @@ export default {
         }
       })
     },
+    clearForm() {
+      this.menu = {
+        id: '',
+        title: '',
+        name: '',
+        path: '',
+        parentId: 0,
+        component: '',
+        sort: 0,
+        hidden: false,
+        alwaysShow: false,
+        redirect: '',
+        meta: {
+          title: '',
+          icon: '',
+          noCache: false,
+          affix: false,
+          breadcrumb: false,
+          activeMenu: ''
+        }
+      }
+      this.selectName = ''
+      this.expandedNode = []
+      this.selectId = ''
+      if (this.checkId) {
+        this.$refs['groupTree'].setChecked(this.checkId, false, false)
+        this.checkId = ''
+      }
+    },
     menuTreeList() {
       menuTree().then(res => {
         if (res.code === 1) {
@@ -272,7 +302,7 @@ export default {
       })
     },
     deleteRow() {
-      if (!this.selectIndex) {
+      if (!this.selectId) {
         this.$message({
           type: 'warning',
           message: '请先选择一个删除的菜单！'
@@ -284,7 +314,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteById(this.selectIndex).then(res => {
+        deleteById(this.selectId).then(res => {
           if (res.code === 1) {
             this.$message({
               type: 'success',
@@ -295,7 +325,7 @@ export default {
       })
     },
     handleSelect(index) {
-      this.selectIndex = index
+      this.selectId = index
       menuInfo(index).then(res => {
         if (res.code === 1) {
           const row = res.data
@@ -335,13 +365,21 @@ export default {
         this.checkId = 0
         this.menu.parentId = 0
       }
+      if (this.selectId && (this.selectId == this.checkId)) {
+        this.$message({
+          type: 'warning',
+          message: '该节点不能被选择！'
+        })
+        this.$refs['groupTree'].setChecked(this.checkId, false, false)
+      }
     }
   }
 }
 </script>
 <style scoped>
-  .el-card__body {
-    padding: 10px;
+
+  .app-container .el-card__body {
+    padding: 0!important;
   }
 
   .el-checkbox.is-bordered+.el-checkbox.is-bordered {
