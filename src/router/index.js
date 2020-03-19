@@ -106,6 +106,12 @@ export const asyncRoutes = [
         meta: { title: '角色管理' }
       },
       {
+        path: 'resource',
+        component: () => import('@/views/system/resources'),
+        name: 'resource',
+        meta: { title: '资源管理' }
+      },
+      {
         path: 'drag-table',
         component: () => import('@/views/table/drag-table'),
         name: 'DragTable',
