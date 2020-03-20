@@ -94,6 +94,18 @@ export const asyncRoutes = [
     },
     children: [
       {
+        path: 'user',
+        component: () => import('@/views/system/user'),
+        name: 'user',
+        meta: { title: '用户管理' }
+      },
+      {
+        path: 'department',
+        component: () => import('@/views/system/department'),
+        name: 'department',
+        meta: { title: '部门管理' }
+      },
+      {
         path: 'menu',
         component: () => import('@/views/system/menu1'),
         name: 'menu',

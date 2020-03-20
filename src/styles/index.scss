@@ -290,3 +290,21 @@ aside {
   background-color: #ccc;
   -webkit-border-radius: 4px;
 }
+
+.el-tips {
+  border: 1px solid #abdcff;
+  background-color: #f0faff;
+  position: relative;
+  padding: 8px 8px 8px 38px;
+  border-radius: 4px;
+  color: #515a6e;
+  font-size: 14px;
+  line-height: 16px;
+  .el-tips-icon {
+    color: #2d8cf0;
+    font-size: 16px;
+    top: 6px;
+    left: 12px;
+    position: absolute;
+  }
+}

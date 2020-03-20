@@ -10,12 +10,10 @@
       </el-container>
       <el-container style="height: 800px">
         <el-aside style="padding: 0;background: #fff;" :width="asideWidth">
-          <el-alert
-                  :closable="false"
-                  type="info"
-                  show-icon>
-            <p slot="title">当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></p>
-          </el-alert>
+          <div :style="{width: asideWidth}" class="el-tips">
+            <span class="el-tips-icon"><i class="el-icon-info"></i></span>
+            <span>当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></span>
+          </div>
           <el-menu default-active="1-4-1" class="el-menu-vertical-demo" :collapse="collapse" @select="handleSelect">
             <div v-for="firstLevel in treeList" :key="firstLevel.id">
               <el-menu-item :index="firstLevel.id | toString" v-if="firstLevel.children.length == 0">{{firstLevel.label}}</el-menu-item>
