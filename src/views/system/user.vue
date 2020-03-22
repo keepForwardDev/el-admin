@@ -2,16 +2,25 @@
   <div class="app-container">
     <el-card class="box-card">
       <!--  查询条件区                                -->
-      <el-form  :inline="true"  v-model="search">
-        <div class="filter-form"  :style="{'max-height': hideFilter? 0: '500px'}">
+      <el-form v-model="search" :inline="true">
+        <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
           <el-form-item>
-            <el-input placeholder="请输入关键字" v-model="keyword">
-              <el-select v-model="keywordType" slot="prepend" placeholder="请选择" style="width: 100px">
-                <el-option label="名称" value="name"></el-option>
-                <el-option label="手机号" value="phone"></el-option>
-                <el-option label="电子邮箱" value="email"></el-option>
+            <el-input v-model="keyword" placeholder="请输入关键字">
+              <el-select slot="prepend" v-model="keywordType" placeholder="请选择" style="width: 100px">
+                <el-option v-for="item in keywordTypeOptions" :key="item.field" :label="item.label" :value="item.field" />
               </el-select>
             </el-input>
+          </el-form-item>
+
+          <el-form-item label="所属角色">
+            <el-select v-model="searchRole" filterable placeholder="请选择" style="width: 100%">
+              <el-option
+                v-for="item in roleOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
 
           <el-form-item>
@@ -21,19 +30,23 @@
         </div>
       </el-form>
       <div
-              class="block-control"
-              @mouseover="selectStyle(true)"
-              @mouseout="selectStyle(false)"
-              @click="controlFilter">
-        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}"></i>
-        <span :class="{'hover': active}">{{active ? filterText : ''}}</span>
+        class="block-control"
+        @mouseover="selectStyle(true)"
+        @mouseout="selectStyle(false)"
+        @click="controlFilter"
+      >
+        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
+        <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
       </div>
 
       <!--          操作按钮区                -->
       <div class="operation">
-        <el-form  :inline="true">
+        <el-form :inline="true">
           <el-form-item>
-            <el-button type="primary" size="small" @click="showForm">新增</el-button>
+            <el-button type="primary" size="small" icon="el-icon-plus" @click="showForm">新增</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData">批量删除</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -41,91 +54,94 @@
       <!--       表格区                       -->
       <div class="table-content">
         <el-table
-                :header-cell-class-name="headClass"
-                v-loading="listLoading"
-                :data="list"
-                @selection-change="handleSelectionChange"
-                fit
-                border
-                style="width: 100%"
+          v-loading="listLoading"
+          :header-cell-class-name="headClass"
+          :data="list"
+          fit
+          border
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
         >
           <el-table-column
-                  type="selection"
-                  width="55">
-          </el-table-column>
-          <el-table-column
-                  show-overflow-tooltip
-                  prop="name"
-                  align="center"
-                  label="名称"
-          >
-            <template slot-scope="scope">
-              <span>{{scope.row.name}}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-                  prop="avatar"
-                  align="center"
-                  label="头像"
+            type="selection"
+            width="55"
           />
           <el-table-column
-                  prop="deptName"
-                  align="center"
-                  label="所属部门"
-                  show-overflow-tooltip
+            show-overflow-tooltip
+            prop="name"
+            align="center"
+            label="名称"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.deptName}}</span>
+              <span>{{ scope.row.name }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  show-overflow-tooltip
-                  prop="phone"
-                  align="center"
-                  label="手机"
+            prop="avatar"
+            align="center"
+            label="头像"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.phone}}</span>
+              <el-avatar v-if="scope.row.avatar" size="medium" :src="scope.row.avatar" />
             </template>
           </el-table-column>
           <el-table-column
-                  show-overflow-tooltip
-                  prop="email"
-                  align="center"
-                  label="邮箱"
+            prop="deptName"
+            align="center"
+            label="所属部门"
+            show-overflow-tooltip
           >
             <template slot-scope="scope">
-              <span>{{scope.row.email}}</span>
+              <span>{{ scope.row.deptName }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  prop="sex"
-                  align="center"
-                  label="性别"
+            show-overflow-tooltip
+            prop="phone"
+            align="center"
+            label="手机"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.sex | convertSex}}</span>
+              <span>{{ scope.row.phone }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  prop="enabled"
-                  align="center"
-                  label="状态"
+            show-overflow-tooltip
+            prop="email"
+            align="center"
+            label="邮箱"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.enabled | convertEnabled}}</span>
+              <span>{{ scope.row.email }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  prop="createTime"
-                  align="center"
-                  label="创建时间"
+            prop="sex"
+            align="center"
+            label="性别"
           >
+            <template slot-scope="scope">
+              <span>{{ scope.row.sex | convertSex }}</span>
+            </template>
           </el-table-column>
           <el-table-column
-                  align="center"
-                  label="操作"
-                  width="400"
+            prop="enabled"
+            align="center"
+            label="状态"
+          >
+            <template slot-scope="scope">
+              <span>{{ scope.row.enabled | convertEnabled }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="createTime"
+            align="center"
+            label="创建时间"
+          />
+          <el-table-column
+            align="center"
+            label="操作"
+            width="400"
           >
             <template slot-scope="{row}">
               <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
@@ -136,25 +152,46 @@
 
         <div class="el-page">
           <el-pagination
-                  :current-page="pager.currentPage"
-                  :page-sizes="pageSizes"
-                  :page-size="pager.pageSize"
-                  :layout="pagerSetting"
-                  :total="pager.totalCount"
-                  @size-change="getList(true)"
-                  @current-change="getList(true)"
+            :current-page="pager.currentPage"
+            :page-sizes="pageSizes"
+            :page-size="pager.pageSize"
+            :layout="pagerSetting"
+            :total="pager.totalCount"
+            @size-change="getList(true)"
+            @current-change="getList(true)"
           />
         </div>
       </div>
       <!--         弹窗区             -->
       <el-dialog
-              :title="dialogTitle"
-              :visible.sync="dialogFormVisible"
-              :width="dialogWidth"
+        :title="dialogTitle"
+        :visible.sync="dialogFormVisible"
+        :width="dialogWidth"
       >
         <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
           <el-form-item label="用户名称" prop="name">
             <el-input v-model="formData.name" />
+          </el-form-item>
+          <el-form-item label="所属部门">
+            <el-tree
+              ref="groupTree1"
+              node-key="id"
+              :data="treeList"
+              :default-expanded-keys="expandedNode"
+              accordion
+              highlight-current
+              @node-click="selectNode"
+            />
+          </el-form-item>
+          <el-form-item label="所属角色">
+            <el-select v-model="role" multiple filterable placeholder="请选择" style="width: 100%" @change="roleSelectChange">
+              <el-option
+                v-for="item in roleOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item label="手机号" prop="phone">
             <el-input v-model="formData.phone" />
@@ -162,88 +199,64 @@
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="formData.email" />
           </el-form-item>
+          <el-form-item label="职务">
+            <el-input v-model="formData.duty" />
+          </el-form-item>
+          <el-form-item label="出生日期">
+            <el-date-picker
+              v-model="formData.birthday"
+              value-format="yyyy-MM-dd"
+              type="date"
+              placeholder="选择日期"
+            />
+          </el-form-item>
           <el-form-item label="性别">
-            <el-radio v-model="formData.sex" label="1">男</el-radio>
-            <el-radio v-model="formData.sex" label="2">女</el-radio>
+            <el-radio v-model="formData.sex" :label="1">男</el-radio>
+            <el-radio v-model="formData.sex" :label="2">女</el-radio>
           </el-form-item>
           <el-form-item label="头像">
-            <el-input
-                    placeholder="请选择日期"
-                    v-model="input3">
-              <el-avatar size="mini" slot="suffix" :src="'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif?imageView2/1/w/80/h/80'"></el-avatar>
-            </el-input></el-form-item>
+            <el-row>
+              <el-col v-if="formData.avatar" :span="2">
+                <el-avatar size="medium" :src="formData.avatar" />
+              </el-col>
+              <el-col :span="2">
+                <el-upload
+                  :show-file-list="false"
+                  :action="uploadUrl()"
+                  :on-success="uploadSuccess"
+                  :on-error="uploadError"
+                >
+                  <el-button size="small" type="primary">点击上传</el-button>
+                </el-upload>
+              </el-col>
+            </el-row>
+          </el-form-item>
+          <el-form-item label="是否启用">
+            <el-switch
+              v-model="formData.enabled"
+              :active-value="1"
+              :inactive-value="0"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+            />
+          </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="saveForm">保存</el-button>
-      </span>
+          <el-button @click="dialogFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="saveForm">保存</el-button>
+        </span>
       </el-dialog>
     </el-card>
   </div>
 </template>
 <script>
-import { getList, saveFormData, deleteData } from '@/api/system/user'
-import { validNotNull, validNotCN } from '@/utils/validate'
+import { deleteData, getList, saveFormData } from '@/api/system/user'
+import { treeList } from '@/api/system/department'
+import { roleLabelNodes } from '@/api/system/role'
+import { validNotNull } from '@/utils/validate'
+
 export default {
-  name: 'resources',
-  data() {
-    return {
-      search: {
-        name: '',
-        code: ''
-      },
-      pager: {
-        totalCount: 0,
-        pageCount: 1,
-        pageSize: 10,
-        currentPage: 1
-      },
-      pageSizes: [10, 20, 40, 60, 100],
-      listLoading: false, // 表格加载动画
-      list: [], // 表格数据
-      dialogFormVisible: false,
-      dialogTitle: '新增角色',
-      formData: { // 表单数据
-        id: '',
-        name: '',
-        code: '',
-        description: '',
-        menuIds: [],
-        resourceIds: []
-      },
-      rules: { // 表单校验规则
-        name: validNotNull(),
-        code: [{ required: true, message: '该项为必填项，请填写完整！' }, { validator: validNotCN, trigger: 'blur' }]
-      },
-      active: false,
-      hideFilter: false,
-      keywordType: 'name',
-      keyword: ''
-    }
-  },
-  computed: {
-    filterText() {
-      if (!this.hideFilter) {
-        return '隐藏查询条件'
-      } else {
-        return '显示查询条件'
-      }
-    },
-    dialogWidth() {
-      if (this.$store.state.app.device === 'mobile') {
-        return '100%'
-      } else {
-        return '700px'
-      }
-    },
-    pagerSetting() {
-      if (this.$store.state.app.device === 'mobile') {
-        return 'prev, pager, next'
-      } else {
-        return 'total, sizes, prev, pager, next, jumper'
-      }
-    }
-  },
+  name: 'User',
   filters: {
     toString(val) {
       return '' + val
@@ -273,11 +286,111 @@ export default {
       }
     }
   },
+  data() {
+    const customValidator = (rule, value, callback) => {
+      if (this.value) {
+        callback()
+        return
+      }
+      if (this.formData.email || this.formData.phone) {
+        callback()
+      } else {
+        callback(new Error('邮箱和手机二者需填一个作为登录账号！'))
+      }
+    }
+    return {
+      search: {},
+      pager: {
+        totalCount: 0,
+        pageCount: 1,
+        pageSize: 10,
+        currentPage: 1
+      },
+      pageSizes: [10, 20, 40, 60, 100],
+      listLoading: false, // 表格加载动画
+      list: [], // 表格数据
+      dialogFormVisible: false,
+      dialogTitle: '新增用户',
+      formData: { // 表单数据
+        id: '',
+        name: '',
+        deptId: '',
+        role: [],
+        phone: '',
+        email: '',
+        duty: '',
+        birthday: null,
+        sex: 1,
+        avatar: '',
+        enabled: 1
+      },
+      rules: { // 表单校验规则
+        name: validNotNull(),
+        email: [
+          { validator: customValidator, trigger: 'blur' },
+          { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+        ],
+        phone: [{ validator: customValidator, trigger: 'blur' }]
+      },
+      dialogWidth: '700px',
+      pagerSetting: 'total, sizes, prev, pager, next, jumper',
+      selection: [],
+      active: false,
+      hideFilter: false,
+      keywordType: 'name',
+      keyword: '',
+      keywordTypeOptions: [
+        {
+          label: '名称',
+          field: 'name'
+        },
+        {
+          label: '手机号',
+          field: 'phone'
+        },
+        {
+          label: '电子邮箱',
+          field: 'email'
+        }
+      ],
+      treeList: [],
+      roleOptions: [],
+      role: [],
+      searchRole: '',
+      expandedNode: []
+    }
+  },
+  computed: {
+    filterText() {
+      if (!this.hideFilter) {
+        return '隐藏查询条件'
+      } else {
+        return '显示查询条件'
+      }
+    }
+  },
+  watch: {
+    '$store.state.app.device': {
+      handler(newName, oldName) {
+        if (newName === 'mobile') {
+          this.hideFilter = true
+          this.dialogWidth = '100%'
+          this.pagerSetting = 'prev, pager, next'
+        } else {
+          this.dialogWidth = '700px'
+          this.pagerSetting = 'total, sizes, prev, pager, next, jumper'
+        }
+      },
+      deep: true
+    }
+  },
   created() {
     if (this.$store.state.app.device === 'mobile') {
       this.hideFilter = true
     }
     this.getList(true)
+    this.departmentTree()
+    this.getRoleOptions()
   },
   methods: {
     getList(flag) {
@@ -286,6 +399,10 @@ export default {
         this.pager.currentPage = 1
       }
       const params = Object.assign({}, this.search, { pageSize: this.pager.pageSize, currentPage: this.pager.currentPage })
+      params[this.keywordType] = this.keyword
+      if (this.searchRole) {
+        params.roleId = this.searchRole
+      }
       getList(params).then(res => {
         this.listLoading = false
         if (res.code === 1) {
@@ -303,12 +420,17 @@ export default {
       this.formData = {
         id: '',
         name: '',
-        code: '',
-        description: '',
-        menuIds: [],
-        resourceIds: []
+        deptId: '',
+        role: [],
+        phone: '',
+        email: '',
+        duty: '',
+        birthday: null,
+        sex: 1,
+        avatar: '',
+        enabled: 1
       }
-      this.dialogTitle = '新增角色'
+      this.dialogTitle = '新增用户'
       this.dialogFormVisible = true
     },
     saveForm() {
@@ -341,22 +463,43 @@ export default {
       this.formData = {
         id: row.id,
         name: row.name,
-        code: row.code,
-        description: row.description,
-        menuIds: row.menuIds,
-        resourceIds: row.resourceIds
+        deptId: row.deptId,
+        role: row.role,
+        phone: row.phone,
+        email: row.email,
+        duty: row.duty,
+        birthday: row.birthday,
+        sex: row.sex,
+        avatar: row.avatar,
+        enabled: row.enabled
       }
-      this.expandedNode = row.menuIds
+      if (row.deptId) {
+        setTimeout(() => {
+          this.$refs['groupTree1'].setCurrentKey(row.deptId)
+        }, 1000)
+        this.expandedNode = [row.deptId]
+      }
+      if (row.role) {
+        this.role = row.role.map(item => {
+          return item.value
+        })
+      }
       this.dialogFormVisible = true
-      this.dialogTitle = '编辑角色'
+      this.dialogTitle = '编辑用户'
     },
     deleteData(row) {
+      let selection = []
+      if (row) {
+        selection.push(row.id)
+      } else {
+        selection = this.selection
+      }
       this.$confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteData(row.id).then(res => {
+        deleteData(selection).then(res => {
           if (res.code === 1) {
             this.$message({
               message: '删除成功！',
@@ -377,14 +520,53 @@ export default {
       this.hideFilter = !this.hideFilter
     },
     resetQuery() {
-      this.search = {
-        name: '',
-        code: ''
-      }
+      this.searchRole = ''
+      this.search = {}
+      this.keyword = ''
+      this.keywordType = 'name'
       this.getList(true)
     },
     handleSelectionChange(val) {
-      debugger
+      if (val.length > 0) {
+        this.selection = val.some(item => item.id)
+      } else {
+        this.selection = []
+      }
+    },
+    uploadSuccess(response, file, fileList) {
+      this.formData.avatar = response.data
+    },
+    uploadError(e, file, fileList) {
+      this.$message({
+        message: '网络错误，请稍后重试！',
+        type: 'error'
+      })
+    },
+    departmentTree() {
+      treeList().then(res => {
+        if (res.code === 1) {
+          this.treeList = res.data
+        }
+      })
+    },
+    selectNode(node) {
+      this.formData.deptId = node.id
+    },
+    getRoleOptions() {
+      roleLabelNodes().then(res => {
+        if (res.code === 1) {
+          this.roleOptions = res.data
+        }
+      })
+    },
+    roleSelectChange(val) {
+      const array = []
+      val.forEach(v => {
+        array.push({
+          value: v
+        })
+      })
+      this.formData.role = array
     }
   }
 }

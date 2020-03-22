@@ -25,3 +25,11 @@ export function deleteRole(id) {
     method: 'get'
   })
 }
+
+export function roleLabelNodes() {
+  const url = '/role/labelNodes/'
+  return request({
+    url: url,
+    method: 'get'
+  })
+}

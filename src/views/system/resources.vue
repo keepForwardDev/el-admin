@@ -30,7 +30,7 @@
       <div class="operation">
         <el-form :inline="true">
           <el-form-item>
-            <el-button type="primary" size="small" @click="showForm">新增</el-button>
+            <el-button type="primary" size="small" icon="el-icon-plus" @click="showForm">新增</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -194,7 +194,7 @@ export default {
     }
   },
   data() {
-    var validMenu = (rule, value, callback) => {
+    const validMenu = (rule, value, callback) => {
       if (this.formData.menuId) {
         callback()
       } else {
@@ -233,6 +233,8 @@ export default {
       },
       active: false,
       hideFilter: false,
+      dialogWidth: '700px',
+      pagerSetting: 'total, sizes, prev, pager, next, jumper',
       expandedNode: [],
       treeList: []
     }
@@ -244,26 +246,24 @@ export default {
       } else {
         return '显示查询条件'
       }
-    },
-    dialogWidth() {
-      if (this.$store.state.app.device === 'mobile') {
-        return '100%'
-      } else {
-        return '700px'
-      }
-    },
-    pagerSetting() {
-      if (this.$store.state.app.device === 'mobile') {
-        return 'prev, pager, next'
-      } else {
-        return 'total, sizes, prev, pager, next, jumper'
-      }
+    }
+  },
+  watch: {
+    '$store.state.app.device': {
+      handler(newName, oldName) {
+        if (newName === 'mobile') {
+          this.hideFilter = true
+          this.dialogWidth = '100%'
+          this.pagerSetting = 'prev, pager, next'
+        } else {
+          this.dialogWidth = '700px'
+          this.pagerSetting = 'total, sizes, prev, pager, next, jumper'
+        }
+      },
+      deep: true
     }
   },
   created() {
-    if (this.$store.state.app.device === 'mobile') {
-      this.hideFilter = true
-    }
     this.getList(true)
     this.menuTreeList()
   },
@@ -392,9 +392,18 @@ export default {
       })
     },
     checkChange(v1, v2, v3, v4) {
+      if (v1.children.length > 0) {
+        this.$message({
+          message: '只能选择最末级菜单！',
+          type: 'warning'
+        })
+        this.$refs['groupTree'].setChecked(v1.id, false, false)
+        return
+      }
       if (v2.checkedKeys.length > 1) {
         const preCheckKey = v2.checkedKeys.filter(key => key !== v1.id)
         this.$refs['groupTree'].setChecked(preCheckKey[0], false, false)
+        this.formData.menuId = v1.id
       } else if (v2.checkedKeys.length == 1) {
         this.formData.menuId = v1.id
       } else {

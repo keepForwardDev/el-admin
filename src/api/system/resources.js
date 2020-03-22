@@ -26,3 +26,13 @@ export function deleteData(id) {
   })
 }
 
+export function menuResource(menuId) {
+  let url = '/resource/menuResource/'
+  if (menuId) {
+    url += menuId
+  }
+  return request({
+    url: url,
+    method: 'get'
+  })
+}

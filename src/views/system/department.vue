@@ -5,76 +5,80 @@
         <el-container>
           <el-main>
             <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteRow">删除</el-button>
-            <el-divider></el-divider>
+            <el-divider />
           </el-main>
         </el-container>
         <el-container style="height: 800px">
           <el-aside style="padding: 0;background: #fff;" :width="asideWidth">
 
             <div :style="{width: asideWidth}" class="el-tips">
-              <span class="el-tips-icon"><i class="el-icon-info"></i></span>
-              <span>当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></span>
+              <span class="el-tips-icon">
+                <i class="el-icon-info" />
+              </span>
+              <span>当前选中的节点：<span style="color: #4A9FF9">{{ selectName }}</span></span>
             </div>
             <div style="padding-top: 10px;padding-bottom: 10px">
               <el-input
-                      placeholder="请输入内容"
-                      v-model="filterText">
-                <i slot="suffix" class="el-input__icon el-icon-search"></i>
+                v-model="filterText"
+                placeholder="请输入内容"
+              >
+                <i slot="suffix" class="el-input__icon el-icon-search" />
               </el-input>
             </div>
             <el-tree
-                    node-key="id"
-                    ref="groupTree"
-                    :data="treeList"
-                    :default-expanded-keys="expandedNode"
-                    :filter-node-method="filterNode"
-                    accordion
-                    highlight-current
-                    @node-click="handleNodeClick">
-            </el-tree>
+              ref="groupTree"
+              node-key="id"
+              :data="treeList"
+              :default-expanded-keys="expandedNode"
+              :filter-node-method="filterNode"
+              accordion
+              highlight-current
+              @node-click="handleNodeClick"
+            />
           </el-aside>
 
           <el-main>
             <el-form ref="form" :model="formData" label-width="120px" size="mini" :rules="rules">
               <el-form-item label="名称" prop="name">
-                <el-input v-model="formData.name" size="mini" :style="{width: inputWidth}"/>
+                <el-input v-model="formData.name" size="mini" :style="{width: inputWidth}" />
               </el-form-item>
               <el-form-item label="上级名称">
-                <el-input v-model="parentName" size="mini" :style="{width: inputWidth}" readonly/>
+                <el-input v-model="parentName" size="mini" :style="{width: inputWidth}" readonly />
                 <el-popover
-                        placement="right"
-                        width="400"
-                        trigger="click">
+                  placement="right"
+                  width="400"
+                  trigger="click"
+                >
                   <el-tree
-                          ref="groupTree1"
-                          node-key="id"
-                          :data="treeList"
-                          accordion
-                          @node-click="selectNode"
-                          highlight-current>
-                  </el-tree>
-                  <el-button icon="el-icon-edit-outline" slot="reference" circle></el-button>
+                    ref="groupTree1"
+                    node-key="id"
+                    :data="treeList"
+                    accordion
+                    highlight-current
+                    @node-click="selectNode"
+                  />
+                  <el-button slot="reference" icon="el-icon-edit-outline" circle />
                 </el-popover>
               </el-form-item>
               <el-form-item label="部门负责人">
                 <el-autocomplete
-                        :style="{width: inputWidth}"
-                        v-model="formData.mainChargeUserId"
-                        :fetch-suggestions="querySearch"
-                        placeholder="请输入内容"
-                        :trigger-on-focus="false"
-                        @select="handleSelect"
-                ></el-autocomplete>
+                  v-model="mainChargeUserName"
+                  :style="{width: inputWidth}"
+                  :fetch-suggestions="querySearch"
+                  placeholder="请输入内容"
+                  :trigger-on-focus="false"
+                  @select="handleSelect"
+                />
               </el-form-item>
               <el-form-item label="排序号">
                 <el-input v-model="formData.sort" size="mini" :style="{width: inputWidth}" type="number" />
               </el-form-item>
               <el-form-item label="部门编码">
-                <el-input v-model="levelCode" size="mini" :style="{width: inputWidth}" disabled/>
+                <el-input v-model="levelCode" size="mini" :style="{width: inputWidth}" disabled />
               </el-form-item>
               <el-form-item label="">
                 <el-button type="primary" icon="el-icon-edit" @click="saveForm">保存</el-button>
-                <el-button  @click="clearForm">重置</el-button>
+                <el-button @click="clearForm">重置</el-button>
               </el-form-item>
             </el-form>
           </el-main>
@@ -87,9 +91,15 @@
 
 <script>
 import { saveFormData, treeList, deleteData, departmentInfo } from '@/api/system/department'
+import { getList } from '@/api/system/user'
 import { validNotNull } from '@/utils/validate'
 export default {
-  name: 'department',
+  name: 'Department',
+  filters: {
+    toString(val) {
+      return '' + val
+    }
+  },
   data() {
     return {
       pager: {
@@ -114,7 +124,8 @@ export default {
       expandedNode: [],
       filterText: '', // 树过滤内容
       parentName: '',
-      levelCode: ''
+      levelCode: '',
+      mainChargeUserName: ''
     }
   },
   computed: {
@@ -137,9 +148,9 @@ export default {
       return '300px'
     }
   },
-  filters: {
-    toString(val) {
-      return '' + val
+  watch: {
+    filterText(val) {
+      this.$refs.groupTree.filter(val)
     }
   },
   created() {
@@ -163,7 +174,8 @@ export default {
                 message: res.msg,
                 type: 'success'
               })
-              this.dialogFormVisible = false
+              this.getTreeList()
+              this.clearForm()
             }
           })
         }
@@ -177,6 +189,7 @@ export default {
         mainChargeUserId: '',
         sort: 0
       }
+      this.mainChargeUserName = ''
       this.levelCode = ''
       this.selectName = ''
       this.parentName = ''
@@ -211,13 +224,24 @@ export default {
       })
     },
     handleSelect(item) {
-
+      this.formData.mainChargeUserId = item.id
     },
     querySearch(queryString, cb) {
-      var restaurants = this.restaurants
-      var results = queryString ? restaurants.filter(this.createFilter(queryString)) : restaurants
-      // 调用 callback 返回建议列表的数据
-      cb(results)
+      if (queryString.trim()) {
+        getList({
+          name: queryString
+        }).then(res => {
+          if (res.code === 1) {
+            // 调用 callback 返回建议列表的数据
+            cb(res.data.list.map(item => {
+              return {
+                value: item.name,
+                id: item.id
+              }
+            }))
+          }
+        })
+      }
     },
     handleNodeClick(data) {
       this.selectName = data.label
@@ -232,6 +256,7 @@ export default {
             mainChargeUserId: data.mainChargeUserId,
             sort: data.sort
           }
+          this.mainChargeUserName = data.mainChargeUserName
           this.parentName = data.parentName
           this.levelCode = data.levelCode
         }
@@ -244,11 +269,6 @@ export default {
     selectNode(node) {
       this.parentName = node.label
       this.formData.parentId = node.id
-    }
-  },
-  watch: {
-    filterText(val) {
-      this.$refs.groupTree.filter(val);
     }
   }
 }

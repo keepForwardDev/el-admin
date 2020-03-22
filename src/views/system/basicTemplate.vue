@@ -2,13 +2,13 @@
   <div class="app-container">
     <el-card class="box-card">
       <!--  查询条件区                                -->
-      <el-form  :inline="true"  v-model="search">
-        <div class="filter-form"  :style="{'max-height': hideFilter? 0: '500px'}">
+      <el-form v-model="search" :inline="true">
+        <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
           <el-form-item label="资源名称">
-            <el-input v-model="search.name" placeholder="请输入角色名称" cl></el-input>
+            <el-input v-model="search.name" placeholder="请输入角色名称" cl />
           </el-form-item>
           <el-form-item label="资源编码">
-            <el-input v-model="search.code" placeholder="请输入资源唯一编码"></el-input>
+            <el-input v-model="search.code" placeholder="请输入资源唯一编码" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
@@ -17,17 +17,18 @@
         </div>
       </el-form>
       <div
-              class="block-control"
-              @mouseover="selectStyle(true)"
-              @mouseout="selectStyle(false)"
-              @click="controlFilter">
-        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}"></i>
-        <span :class="{'hover': active}">{{active ? filterText : ''}}</span>
+        class="block-control"
+        @mouseover="selectStyle(true)"
+        @mouseout="selectStyle(false)"
+        @click="controlFilter"
+      >
+        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
+        <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
       </div>
 
       <!--          操作按钮区                -->
       <div class="operation">
-        <el-form  :inline="true">
+        <el-form :inline="true">
           <el-form-item>
             <el-button type="primary" size="small" @click="showForm">新增</el-button>
           </el-form-item>
@@ -37,68 +38,67 @@
       <!--       表格区                       -->
       <div class="table-content">
         <el-table
-                :header-cell-class-name="headClass"
-                v-loading="listLoading"
-                :data="list"
-                fit
-                border
-                style="width: 100%"
+          v-loading="listLoading"
+          :header-cell-class-name="headClass"
+          :data="list"
+          fit
+          border
+          style="width: 100%"
         >
           <el-table-column
-                  show-overflow-tooltip
-                  prop="name"
-                  align="center"
-                  label="资源名称"
+            show-overflow-tooltip
+            prop="name"
+            align="center"
+            label="资源名称"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.name}}</span>
+              <span>{{ scope.row.name }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  prop="code"
-                  align="center"
-                  label="资源编码"
+            prop="code"
+            align="center"
+            label="资源编码"
           />
           <el-table-column
-                  prop="url"
-                  align="center"
-                  label="访问地址"
-                  show-overflow-tooltip
+            prop="url"
+            align="center"
+            label="访问地址"
+            show-overflow-tooltip
           >
             <template slot-scope="scope">
-              <span>{{scope.row.url}}</span>
+              <span>{{ scope.row.url }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  show-overflow-tooltip
-                  prop="description"
-                  align="center"
-                  label="资源描述"
+            show-overflow-tooltip
+            prop="description"
+            align="center"
+            label="资源描述"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.description}}</span>
+              <span>{{ scope.row.description }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  show-overflow-tooltip
-                  prop="menuName"
-                  align="center"
-                  label="所属菜单"
+            show-overflow-tooltip
+            prop="menuName"
+            align="center"
+            label="所属菜单"
           >
             <template slot-scope="scope">
-              <span>{{scope.row.menuName}}</span>
+              <span>{{ scope.row.menuName }}</span>
             </template>
           </el-table-column>
           <el-table-column
-                  prop="createTime"
-                  align="center"
-                  label="创建时间"
-          >
-          </el-table-column>
+            prop="createTime"
+            align="center"
+            label="创建时间"
+          />
           <el-table-column
-                  align="center"
-                  label="操作"
-                  width="400"
+            align="center"
+            label="操作"
+            width="400"
           >
             <template slot-scope="{row}">
               <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
@@ -109,21 +109,21 @@
 
         <div class="el-page">
           <el-pagination
-                  :current-page="pager.currentPage"
-                  :page-sizes="pageSizes"
-                  :page-size="pager.pageSize"
-                  :layout="pagerSetting"
-                  :total="pager.totalCount"
-                  @size-change="getList(true)"
-                  @current-change="getList(true)"
+            :current-page="pager.currentPage"
+            :page-sizes="pageSizes"
+            :page-size="pager.pageSize"
+            :layout="pagerSetting"
+            :total="pager.totalCount"
+            @size-change="getList(true)"
+            @current-change="getList(true)"
           />
         </div>
       </div>
       <!--         弹窗区             -->
       <el-dialog
-              :title="dialogTitle"
-              :visible.sync="dialogFormVisible"
-              :width="dialogWidth"
+        :title="dialogTitle"
+        :visible.sync="dialogFormVisible"
+        :width="dialogWidth"
       >
         <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
           <el-form-item label="资源名称" prop="name">
@@ -140,9 +140,9 @@
           </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="saveForm">保存</el-button>
-      </span>
+          <el-button @click="dialogFormVisible = false">取 消</el-button>
+          <el-button type="primary" @click="saveForm">保存</el-button>
+        </span>
       </el-dialog>
     </el-card>
   </div>
@@ -151,7 +151,22 @@
 import { getList, saveFormData, deleteData } from '@/api/system/resources'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
-  name: 'resources',
+  name: 'Resources',
+  filters: {
+    toString(val) {
+      return '' + val
+    },
+    iconClass(val) {
+      if (val) {
+        var map = {}
+        map[val] = true
+        return map
+      }
+      return {
+        'el-icon-document': true
+      }
+    }
+  },
   data() {
     return {
       search: {
@@ -169,6 +184,8 @@ export default {
       list: [], // 表格数据
       dialogFormVisible: false,
       dialogTitle: '新增角色',
+      dialogWidth: '700px',
+      pagerSetting: 'total, sizes, prev, pager, next, jumper',
       formData: { // 表单数据
         id: '',
         name: '',
@@ -192,35 +209,21 @@ export default {
       } else {
         return '显示查询条件'
       }
-    },
-    dialogWidth() {
-      if (this.$store.state.app.device === 'mobile') {
-        return '100%'
-      } else {
-        return '700px'
-      }
-    },
-    pagerSetting() {
-      if (this.$store.state.app.device === 'mobile') {
-        return 'prev, pager, next'
-      } else {
-        return 'total, sizes, prev, pager, next, jumper'
-      }
     }
   },
-  filters: {
-    toString(val) {
-      return '' + val
-    },
-    iconClass(val) {
-      if (val) {
-        var map = {}
-        map[val] = true
-        return map
-      }
-      return {
-        'el-icon-document': true
-      }
+  watch: {
+    '$store.state.app.device': {
+      handler(newName, oldName) {
+        if (newName === 'mobile') {
+          this.hideFilter = true
+          this.dialogWidth = '100%'
+          this.pagerSetting = 'prev, pager, next'
+        } else {
+          this.dialogWidth = '700px'
+          this.pagerSetting = 'total, sizes, prev, pager, next, jumper'
+        }
+      },
+      deep: true
     }
   },
   created() {

@@ -18,10 +18,11 @@ export function saveFormData(data) {
   })
 }
 
-export function deleteData(id) {
-  const url = '/user/delete/' + id
+export function deleteData(data) {
+  const url = '/user/delete/'
   return request({
     url: url,
-    method: 'get'
+    method: 'post',
+    data
   })
 }
