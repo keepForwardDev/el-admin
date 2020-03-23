@@ -1,260 +1,312 @@
 <template>
   <div class="app-container">
     <el-card class="box-card">
-      <!--  查询条件区                                -->
-      <el-form v-model="search" :inline="true">
-        <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
-          <el-form-item>
-            <el-input v-model="keyword" placeholder="请输入关键字">
-              <el-select slot="prepend" v-model="keywordType" placeholder="请选择" style="width: 100px">
-                <el-option v-for="item in keywordTypeOptions" :key="item.field" :label="item.label" :value="item.field" />
-              </el-select>
+      <el-container>
+        <el-aside style="padding: 0;margin-right:20px;background: #fff;" width="300px" v-if="$store.state.app.device !== 'mobile'">
+          <div class="el-tips">
+              <span class="el-tips-icon">
+                <i class="el-icon-info" />
+              </span>
+            <span>当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></span>
+          </div>
+
+          <div style="padding-top: 10px;padding-bottom: 10px">
+            <el-input
+                    v-model="treeFilterText"
+                    placeholder="请输入内容"
+            >
+              <i slot="suffix" class="el-input__icon el-icon-search" />
             </el-input>
-          </el-form-item>
+          </div>
 
-          <el-form-item label="所属角色">
-            <el-select v-model="searchRole" filterable placeholder="请选择" style="width: 100%">
-              <el-option
-                v-for="item in roleOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+          <el-tree
+                  ref="leftTree"
+                  node-key="id"
+                  :data="treeList"
+                  :filter-node-method="filterNode"
+                  accordion
+                  default-expand-all
+                  highlight-current
+                  @node-click="selectFilterNode"
+          >
+            <span  slot-scope="{ node }">
+              <span :title="node.label" class="el-tree-node__label">{{ node.label }}</span>
+            </span>
+          </el-tree>
+        </el-aside>
+
+        <el-main>
+          <!--  查询条件区                                -->
+          <el-form v-model="search" :inline="true">
+            <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
+              <el-form-item>
+                <el-input v-model="keyword" placeholder="请输入关键字">
+                  <el-select slot="prepend" v-model="keywordType" placeholder="请选择" style="width: 100px">
+                    <el-option v-for="item in keywordTypeOptions" :key="item.field" :label="item.label" :value="item.field" />
+                  </el-select>
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="所属角色">
+                <el-select v-model="search.roleId" filterable placeholder="请选择" style="width: 100%">
+                  <el-option
+                          v-for="item in roleOptions"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="所属部门" v-if="$store.state.app.device == 'mobile'">
+                <el-cascader
+                        ref="departmentCascader"
+                        v-model="deptValue"
+                        style="width: 100%"
+                        filterable
+                        :options="treeList"
+                        :props="cascaderProps"
+                        clearable
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
+                <el-button class="filter-item" size="small" @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </div>
+          </el-form>
+          <div
+                  class="block-control"
+                  @mouseover="selectStyle(true)"
+                  @mouseout="selectStyle(false)"
+                  @click="controlFilter"
+          >
+            <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
+            <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
+          </div>
+
+          <!--          操作按钮区                -->
+          <div class="operation">
+            <el-form :inline="true">
+              <el-form-item>
+                <el-button type="primary" size="small" icon="el-icon-plus" @click="showForm">新增</el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData">批量删除</el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" size="small" icon="el-icon-refresh" :disabled="selection.length === 0" @click="resetPassword">密码重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!--       表格区                       -->
+          <div class="table-content">
+            <el-table
+                    v-loading="listLoading"
+                    :header-cell-class-name="headClass"
+                    :data="list"
+                    fit
+                    border
+                    style="width: 100%"
+                    @selection-change="handleSelectionChange"
+                    :default-sort="defaultSort"
+                    @sort-change="sortChange"
+            >
+              <el-table-column
+                      type="selection"
+                      width="55"
               />
-            </el-select>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
-            <el-button class="filter-item" size="small" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </div>
-      </el-form>
-      <div
-        class="block-control"
-        @mouseover="selectStyle(true)"
-        @mouseout="selectStyle(false)"
-        @click="controlFilter"
-      >
-        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
-        <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
-      </div>
-
-      <!--          操作按钮区                -->
-      <div class="operation">
-        <el-form :inline="true">
-          <el-form-item>
-            <el-button type="primary" size="small" icon="el-icon-plus" @click="showForm">新增</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData">批量删除</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <!--       表格区                       -->
-      <div class="table-content">
-        <el-table
-          v-loading="listLoading"
-          :header-cell-class-name="headClass"
-          :data="list"
-          fit
-          border
-          style="width: 100%"
-          @selection-change="handleSelectionChange"
-        >
-          <el-table-column
-            type="selection"
-            width="55"
-          />
-          <el-table-column
-            show-overflow-tooltip
-            prop="name"
-            align="center"
-            label="名称"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.name }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="avatar"
-            align="center"
-            label="头像"
-          >
-            <template slot-scope="scope">
-              <el-avatar v-if="scope.row.avatar" size="medium" :src="scope.row.avatar" />
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="deptName"
-            align="center"
-            label="所属部门"
-            show-overflow-tooltip
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.deptName }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            show-overflow-tooltip
-            prop="phone"
-            align="center"
-            label="手机"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.phone }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            show-overflow-tooltip
-            prop="email"
-            align="center"
-            label="邮箱"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.email }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="sex"
-            align="center"
-            label="性别"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.sex | convertSex }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="enabled"
-            align="center"
-            label="状态"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.enabled | convertEnabled }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-            prop="createTime"
-            align="center"
-            label="创建时间"
-          />
-          <el-table-column
-            align="center"
-            label="操作"
-            width="400"
-          >
-            <template slot-scope="{row}">
-              <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
-              <el-button type="danger" size="small" @click="deleteData(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <div class="el-page">
-          <el-pagination
-            :current-page="pager.currentPage"
-            :page-sizes="pageSizes"
-            :page-size="pager.pageSize"
-            :layout="pagerSetting"
-            :total="pager.totalCount"
-            @size-change="getList(true)"
-            @current-change="getList(true)"
-          />
-        </div>
-      </div>
-      <!--         弹窗区             -->
-      <el-dialog
-        :title="dialogTitle"
-        :visible.sync="dialogFormVisible"
-        :width="dialogWidth"
-      >
-        <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
-          <el-form-item label="用户名称" prop="name">
-            <el-input v-model="formData.name" />
-          </el-form-item>
-          <el-form-item label="所属部门">
-            <el-tree
-              ref="groupTree1"
-              node-key="id"
-              :data="treeList"
-              :default-expanded-keys="expandedNode"
-              accordion
-              highlight-current
-              @node-click="selectNode"
-            />
-          </el-form-item>
-          <el-form-item label="所属角色">
-            <el-select v-model="role" multiple filterable placeholder="请选择" style="width: 100%" @change="roleSelectChange">
-              <el-option
-                v-for="item in roleOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="name"
+                      align="center"
+                      label="名称"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.name }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="avatar"
+                      align="center"
+                      label="头像"
+              >
+                <template slot-scope="scope">
+                  <el-avatar v-if="scope.row.avatar" size="medium" :src="scope.row.avatar" />
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="deptName"
+                      align="center"
+                      label="所属部门"
+                      show-overflow-tooltip
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.deptName }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="phone"
+                      align="center"
+                      label="手机"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.phone }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="email"
+                      align="center"
+                      label="邮箱"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.email }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="sex"
+                      align="center"
+                      label="性别"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.sex | convertSex }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="enabled"
+                      align="center"
+                      label="状态"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.enabled | convertEnabled }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="createTime"
+                      align="center"
+                      label="创建时间"
+                      sortable="custom"
               />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="手机号" prop="phone">
-            <el-input v-model="formData.phone" />
-          </el-form-item>
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="formData.email" />
-          </el-form-item>
-          <el-form-item label="职务">
-            <el-input v-model="formData.duty" />
-          </el-form-item>
-          <el-form-item label="出生日期">
-            <el-date-picker
-              v-model="formData.birthday"
-              value-format="yyyy-MM-dd"
-              type="date"
-              placeholder="选择日期"
-            />
-          </el-form-item>
-          <el-form-item label="性别">
-            <el-radio v-model="formData.sex" :label="1">男</el-radio>
-            <el-radio v-model="formData.sex" :label="2">女</el-radio>
-          </el-form-item>
-          <el-form-item label="头像">
-            <el-row>
-              <el-col v-if="formData.avatar" :span="2">
-                <el-avatar size="medium" :src="formData.avatar" />
-              </el-col>
-              <el-col :span="2">
-                <el-upload
-                  :show-file-list="false"
-                  :action="uploadUrl()"
-                  :on-success="uploadSuccess"
-                  :on-error="uploadError"
-                >
-                  <el-button size="small" type="primary">点击上传</el-button>
-                </el-upload>
-              </el-col>
-            </el-row>
-          </el-form-item>
-          <el-form-item label="是否启用">
-            <el-switch
-              v-model="formData.enabled"
-              :active-value="1"
-              :inactive-value="0"
-              active-color="#13ce66"
-              inactive-color="#ff4949"
-            />
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
+              <el-table-column
+                      align="center"
+                      label="操作"
+                      width="200"
+              >
+                <template slot-scope="{row}">
+                  <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
+                  <el-button type="danger" size="small" @click="deleteData(row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="el-page">
+              <el-pagination
+                      :current-page="pager.currentPage"
+                      :page-sizes="pageSizes"
+                      :page-size="pager.pageSize"
+                      :layout="pagerSetting"
+                      :total="pager.totalCount"
+                      @size-change="getList(true)"
+                      @current-change="getList(true)"
+              />
+            </div>
+          </div>
+          <!--         弹窗区             -->
+          <el-dialog
+                  :title="dialogTitle"
+                  :visible.sync="dialogFormVisible"
+                  :width="dialogWidth"
+          >
+            <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
+              <el-form-item label="用户名称" prop="name">
+                <el-input v-model="formData.name" />
+              </el-form-item>
+              <el-form-item label="所属部门">
+                <el-tree
+                        ref="groupTree1"
+                        node-key="id"
+                        :data="treeList"
+                        :default-expanded-keys="expandedNode"
+                        accordion
+                        highlight-current
+                        @node-click="selectNode"
+                />
+              </el-form-item>
+              <el-form-item label="所属角色">
+                <el-select v-model="role" multiple filterable placeholder="请选择" style="width: 100%" @change="roleSelectChange">
+                  <el-option
+                          v-for="item in roleOptions"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="手机号" prop="phone">
+                <el-input v-model="formData.phone" />
+              </el-form-item>
+              <el-form-item label="邮箱" prop="email">
+                <el-input v-model="formData.email" />
+              </el-form-item>
+              <el-form-item label="职务">
+                <el-input v-model="formData.duty" />
+              </el-form-item>
+              <el-form-item label="出生日期">
+                <el-date-picker
+                        v-model="formData.birthday"
+                        value-format="yyyy-MM-dd"
+                        type="date"
+                        placeholder="选择日期"
+                />
+              </el-form-item>
+              <el-form-item label="性别">
+                <el-radio v-model="formData.sex" :label="1">男</el-radio>
+                <el-radio v-model="formData.sex" :label="2">女</el-radio>
+              </el-form-item>
+              <el-form-item label="头像">
+                <el-row>
+                  <el-col v-if="formData.avatar" :span="2">
+                    <el-avatar size="medium" :src="formData.avatar" />
+                  </el-col>
+                  <el-col :span="2">
+                    <el-upload
+                            :show-file-list="false"
+                            :action="uploadUrl()"
+                            :on-success="uploadSuccess"
+                            :on-error="uploadError"
+                    >
+                      <el-button size="small" type="primary">点击上传</el-button>
+                    </el-upload>
+                  </el-col>
+                </el-row>
+              </el-form-item>
+              <el-form-item label="是否启用">
+                <el-switch
+                        v-model="formData.enabled"
+                        :active-value="1"
+                        :inactive-value="0"
+                        active-color="#13ce66"
+                        inactive-color="#ff4949"
+                />
+              </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
           <el-button @click="dialogFormVisible = false">取 消</el-button>
           <el-button type="primary" @click="saveForm">保存</el-button>
         </span>
-      </el-dialog>
+          </el-dialog>
+        </el-main>
+      </el-container>
     </el-card>
   </div>
 </template>
 <script>
-import { deleteData, getList, saveFormData } from '@/api/system/user'
+import { deleteData, getList, saveFormData, resetPassword } from '@/api/system/user'
 import { treeList } from '@/api/system/department'
 import { roleLabelNodes } from '@/api/system/role'
 import { validNotNull } from '@/utils/validate'
-
 export default {
   name: 'User',
   filters: {
@@ -309,6 +361,10 @@ export default {
       pageSizes: [10, 20, 40, 60, 100],
       listLoading: false, // 表格加载动画
       list: [], // 表格数据
+      defaultSort: {
+        prop: 'createTime',
+        order: 'descending'
+      },
       dialogFormVisible: false,
       dialogTitle: '新增用户',
       formData: { // 表单数据
@@ -357,7 +413,14 @@ export default {
       roleOptions: [],
       role: [],
       searchRole: '',
-      expandedNode: []
+      expandedNode: [],
+      cascaderProps: {
+        value: 'id',
+        checkStrictly: true
+      },
+      deptValue: [],
+      treeFilterText: '',
+      selectName: ''
     }
   },
   computed: {
@@ -382,6 +445,9 @@ export default {
         }
       },
       deep: true
+    },
+    treeFilterText(val, oldVal) {
+      this.$refs.leftTree.filter(val)
     }
   },
   created() {
@@ -400,8 +466,8 @@ export default {
       }
       const params = Object.assign({}, this.search, { pageSize: this.pager.pageSize, currentPage: this.pager.currentPage })
       params[this.keywordType] = this.keyword
-      if (this.searchRole) {
-        params.roleId = this.searchRole
+      if (this.deptValue.length > 0) {
+        params.deptId = this.deptValue[this.deptValue.length - 1]
       }
       getList(params).then(res => {
         this.listLoading = false
@@ -520,15 +586,19 @@ export default {
       this.hideFilter = !this.hideFilter
     },
     resetQuery() {
-      this.searchRole = ''
       this.search = {}
       this.keyword = ''
       this.keywordType = 'name'
+      if (this.$refs.leftTree && this.deptValue.length > 0) {
+        this.$refs.leftTree.setCurrentKey(null)
+        this.deptValue = []
+      }
+      this.selectName = ''
       this.getList(true)
     },
     handleSelectionChange(val) {
       if (val.length > 0) {
-        this.selection = val.some(item => item.id)
+        this.selection = val.map(item => item.id)
       } else {
         this.selection = []
       }
@@ -567,9 +637,40 @@ export default {
         })
       })
       this.formData.role = array
+    },
+    selectFilterNode(node) {
+      this.deptValue = [node.id]
+      this.selectName = node.label
+      this.getList(true)
+    },
+    filterNode(value, data) {
+      if (!value) return true
+      return data.label.indexOf(value) !== -1
+    },
+    resetPassword() {
+      this.$confirm('确定重置吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        resetPassword(this.selection).then(res => {
+          if (res.code === 1) {
+            this.$alert('密码已重置为：<span style="color: red">' + res.data + '</span> 请牢记！', '重置成功', {
+              dangerouslyUseHTMLString: true
+            })
+          }
+        })
+      })
+    },
+    sortChange(field) {
+      this.search.orderWay = field.order
+      this.search.orderField = field.prop
     }
   }
 }
 </script>
 <style scoped>
+  .el-main {
+    padding: 0;
+  }
 </style>

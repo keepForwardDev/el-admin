@@ -38,6 +38,8 @@
           fit
           border
           style="width: 100%"
+          :default-sort="defaultSort"
+          @sort-change="sortChange"
         >
           <el-table-column
             prop="id"
@@ -68,6 +70,7 @@
             prop="createTime"
             align="center"
             label="创建时间"
+            sortable="custom"
           />
           <el-table-column
             align="center"
@@ -200,6 +203,10 @@ export default {
       rules: {
         name: validNotNull(),
         code: [{ required: true, message: '该项为必填项，请填写完整！' }, { validator: validNotCN, trigger: 'blur' }]
+      },
+      defaultSort: {
+        prop: 'createTime',
+        order: 'descending'
       },
       dialogWidth: '700px',
       pagerSetting: 'total, sizes, prev, pager, next, jumper',
@@ -406,7 +413,7 @@ export default {
       this.formData.menuIds = [...checkNode, ...halfCheckNode]
     },
     resetQuery() {
-      this.search.name = ''
+      this.search = {}
       this.getList(true)
     },
     getMenuResource() {
@@ -415,6 +422,13 @@ export default {
           this.resourceList = res.data
         }
       })
+    },
+    sortChange(field) {
+      if (field.order) {
+        this.search.orderWay = field.order
+        this.search.orderField = field.prop
+        this.getList(true)
+      }
     }
   }
 }

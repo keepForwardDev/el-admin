@@ -29,12 +29,17 @@
               ref="groupTree"
               node-key="id"
               :data="treeList"
+              default-expand-all
               :default-expanded-keys="expandedNode"
               :filter-node-method="filterNode"
               accordion
               highlight-current
               @node-click="handleNodeClick"
-            />
+            >
+              <span  slot-scope="{ node }">
+                <span :title="node.label" class="el-tree-node__label">{{ node.label }}</span>
+              </span>
+            </el-tree>
           </el-aside>
 
           <el-main>
@@ -65,6 +70,7 @@
                   v-model="mainChargeUserName"
                   :style="{width: inputWidth}"
                   :fetch-suggestions="querySearch"
+                  @blur="handleBlur"
                   placeholder="请输入内容"
                   :trigger-on-focus="false"
                   @select="handleSelect"
@@ -125,7 +131,8 @@ export default {
       filterText: '', // 树过滤内容
       parentName: '',
       levelCode: '',
-      mainChargeUserName: ''
+      mainChargeUserName: '',
+      mainChargeUserValue: ''
     }
   },
   computed: {
@@ -225,6 +232,7 @@ export default {
     },
     handleSelect(item) {
       this.formData.mainChargeUserId = item.id
+      this.mainChargeUserValue = item.value
     },
     querySearch(queryString, cb) {
       if (queryString.trim()) {
@@ -269,6 +277,13 @@ export default {
     selectNode(node) {
       this.parentName = node.label
       this.formData.parentId = node.id
+    },
+    handleBlur(event) {
+      // 选中的名称和输入名称不符合时，清空
+      if (this.mainChargeUserName && this.mainChargeUserName !== this.mainChargeUserValue) {
+        this.mainChargeUserName = ''
+        this.formData.mainChargeUserId = ''
+      }
     }
   }
 }

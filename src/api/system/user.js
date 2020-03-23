@@ -26,3 +26,12 @@ export function deleteData(data) {
     data
   })
 }
+
+export function resetPassword(data) {
+  const url = '/user/resetPassword/'
+  return request({
+    url: url,
+    method: 'post',
+    data
+  })
+}
