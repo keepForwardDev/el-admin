@@ -99,6 +99,7 @@
             prop="createTime"
             align="center"
             label="创建时间"
+            sortable="custom"
           />
           <el-table-column
             align="center"
@@ -225,6 +226,10 @@ export default {
         menuId: '',
         url: '',
         sort: 0
+      },
+      defaultSort: {
+        prop: 'createTime',
+        order: 'descending'
       },
       rules: { // 表单校验规则
         name: validNotNull(),
@@ -382,6 +387,7 @@ export default {
         name: '',
         code: ''
       }
+      this.$refs.grid.clearSort()
       this.getList(true)
     },
     menuTreeList() {
@@ -410,6 +416,13 @@ export default {
         this.formData.menuId = ''
       }
       this.$refs['form'].validateField(['menuId'])
+    },
+    sortChange(field) {
+      if (field.order) {
+        this.search.orderWay = field.order
+        this.search.orderField = field.prop
+        this.getList(true)
+      }
     }
   }
 }

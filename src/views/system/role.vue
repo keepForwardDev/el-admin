@@ -33,6 +33,7 @@
       <div class="table-content">
         <el-table
           v-loading="listLoading"
+          ref="grid"
           :header-cell-class-name="headClass"
           :data="list"
           fit
@@ -414,6 +415,7 @@ export default {
     },
     resetQuery() {
       this.search = {}
+      this.$refs.grid.clearSort()
       this.getList(true)
     },
     getMenuResource() {

@@ -1,157 +1,185 @@
 <template>
   <div class="app-container">
     <el-card class="box-card">
-      <!--  查询条件区                                -->
-      <el-form v-model="search" :inline="true">
-        <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
-          <el-form-item label="资源名称">
-            <el-input v-model="search.name" placeholder="请输入角色名称" cl />
-          </el-form-item>
-          <el-form-item label="资源编码">
-            <el-input v-model="search.code" placeholder="请输入资源唯一编码" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
-            <el-button class="filter-item" size="small" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </div>
-      </el-form>
-      <div
-              class="block-control"
-              @mouseover="selectStyle(true)"
-              @mouseout="selectStyle(false)"
-              @click="controlFilter"
-      >
-        <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
-        <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
-      </div>
+      <el-container>
+        <el-aside style="padding: 0;margin-right:20px;background: #fff;" width="300px" v-if="$store.state.app.device !== 'mobile'">
+          <div class="el-tips">
+              <span class="el-tips-icon">
+                <i class="el-icon-info" />
+              </span>
+            <span>当前选中的节点：<span style="color: #4A9FF9">{{selectName}}</span></span>
+          </div>
 
-      <!--          操作按钮区                -->
-      <div class="operation">
-        <el-form :inline="true">
-          <el-form-item>
-            <el-button type="primary" size="small" @click="showForm">新增</el-button>
-          </el-form-item>
-        </el-form>
-      </div>
+          <div style="padding-top: 10px;padding-bottom: 10px">
+            <el-input
+                    v-model="treeFilterText"
+                    placeholder="请输入内容"
+            >
+              <i slot="suffix" class="el-input__icon el-icon-search" />
+            </el-input>
+          </div>
 
-      <!--       表格区                       -->
-      <div class="table-content">
-        <el-table
-                v-loading="listLoading"
-                :header-cell-class-name="headClass"
-                :data="list"
-                fit
-                border
-                style="width: 100%"
-        >
-          <el-table-column
-                  show-overflow-tooltip
-                  prop="name"
-                  align="center"
-                  label="资源名称"
+          <el-tree
+                  ref="leftTree"
+                  node-key="id"
+                  :data="treeList"
+                  :filter-node-method="filterNode"
+                  accordion
+                  :expand-on-click-node="false"
+                  default-expand-all
+                  highlight-current
+                  @node-click="selectFilterNode"
           >
-            <template slot-scope="scope">
-              <span>{{ scope.row.name }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-                  prop="code"
-                  align="center"
-                  label="资源编码"
-          />
-          <el-table-column
-                  prop="url"
-                  align="center"
-                  label="访问地址"
-                  show-overflow-tooltip
+            <span  slot-scope="{ node }">
+              <span :title="node.label" class="el-tree-node__label">{{ node.label }}</span>
+            </span>
+          </el-tree>
+        </el-aside>
+        <el-main>
+          <!--  查询条件区                                -->
+          <el-form v-model="search" :inline="true">
+            <div class="filter-form" :style="{'max-height': hideFilter? 0: '500px'}">
+              <el-form-item label="字典名称">
+                <el-input v-model="search.name" placeholder="请输入字典名称" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
+                <el-button class="filter-item" size="small" @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </div>
+          </el-form>
+          <div
+                  class="block-control"
+                  @mouseover="selectStyle(true)"
+                  @mouseout="selectStyle(false)"
+                  @click="controlFilter"
           >
-            <template slot-scope="scope">
-              <span>{{ scope.row.url }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-                  show-overflow-tooltip
-                  prop="description"
-                  align="center"
-                  label="资源描述"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.description }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-                  show-overflow-tooltip
-                  prop="menuName"
-                  align="center"
-                  label="所属菜单"
-          >
-            <template slot-scope="scope">
-              <span>{{ scope.row.menuName }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column
-                  prop="createTime"
-                  align="center"
-                  label="创建时间"
-          />
-          <el-table-column
-                  align="center"
-                  label="操作"
-                  width="400"
-          >
-            <template slot-scope="{row}">
-              <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
-              <el-button type="danger" size="small" @click="deleteData(row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+            <i :class="{'el-icon-caret-bottom': hideFilter,'el-icon-caret-top': !hideFilter ,'hovering': active}" />
+            <span :class="{'hover': active}">{{ active ? filterText : '' }}</span>
+          </div>
 
-        <div class="el-page">
-          <el-pagination
-                  :current-page="pager.currentPage"
-                  :page-sizes="pageSizes"
-                  :page-size="pager.pageSize"
-                  :layout="pagerSetting"
-                  :total="pager.totalCount"
-                  @size-change="getList(true)"
-                  @current-change="getList(true)"
-          />
-        </div>
-      </div>
-      <!--         弹窗区             -->
-      <el-dialog
-              :title="dialogTitle"
-              :visible.sync="dialogFormVisible"
-              :width="dialogWidth"
-      >
-        <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
-          <el-form-item label="资源名称" prop="name">
-            <el-input v-model="formData.name" />
-          </el-form-item>
-          <el-form-item label="资源编码" prop="code">
-            <el-input v-model="formData.code" />
-          </el-form-item>
-          <el-form-item label="所属菜单" prop="code">
-            <el-input v-model="formData.code" />
-          </el-form-item>
-          <el-form-item label="备注">
-            <el-input v-model="formData.description" />
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
+          <!--          操作按钮区                -->
+          <div class="operation">
+            <el-form :inline="true">
+              <el-form-item>
+                <el-button type="primary" size="small" @click="showForm">新增</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!--       表格区                       -->
+          <div class="table-content">
+            <el-table
+                    ref="grid"
+                    v-loading="listLoading"
+                    :header-cell-class-name="headClass"
+                    :data="list"
+                    fit
+                    border
+                    style="width: 100%"
+                    :default-sort="defaultSort"
+                    @sort-change="sortChange"
+            >
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="name"
+                      align="center"
+                      label="名称"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.name }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="description"
+                      align="center"
+                      label="备注"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.description }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="name"
+                      align="center"
+                      label="排序值"
+              />
+              <el-table-column
+                      show-overflow-tooltip
+                      prop="enabled"
+                      align="center"
+                      label="状态"
+              >
+                <template slot-scope="scope">
+                  <span>{{ scope.row.enabled ? '启用' : '禁用' }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                      prop="createTime"
+                      align="center"
+                      label="创建时间"
+                      sortable="custom"
+              />
+              <el-table-column
+                      align="center"
+                      label="操作"
+                      width="400"
+              >
+                <template slot-scope="{row}">
+                  <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
+                  <el-button type="danger" size="small" @click="deleteData(row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <div class="el-page">
+              <el-pagination
+                      :current-page="pager.currentPage"
+                      :page-sizes="pageSizes"
+                      :page-size="pager.pageSize"
+                      :layout="pagerSetting"
+                      :total="pager.totalCount"
+                      @size-change="getList(true)"
+                      @current-change="getList(true)"
+              />
+            </div>
+          </div>
+          <!--         弹窗区             -->
+          <el-dialog
+                  :title="dialogTitle"
+                  :visible.sync="dialogFormVisible"
+                  :width="dialogWidth"
+          >
+            <el-form ref="form" :model="formData" label-width="auto" :rules="rules">
+              <el-form-item label="名称" prop="name">
+                <el-input v-model="formData.name" />
+              </el-form-item>
+              <el-form-item label="字典编码" prop="code">
+                <el-input v-model="formData.code" />
+              </el-form-item>
+              <el-form-item label="备注">
+                <el-input v-model="formData.description" />
+              </el-form-item>
+              <el-form-item label="排序号">
+                <el-input v-model="formData.sort" type="number"/>
+              </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
           <el-button @click="dialogFormVisible = false">取 消</el-button>
           <el-button type="primary" @click="saveForm">保存</el-button>
         </span>
-      </el-dialog>
+          </el-dialog>
+        </el-main>
+      </el-container>
     </el-card>
   </div>
 </template>
 <script>
-import { getList, saveFormData, deleteData } from '@/api/system/resources'
+import { getList, getRootList, saveFormData, deleteData } from '@/api/system/dictionary'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
-  name: 'Resources',
+  name: 'dictionary',
   filters: {
     toString(val) {
       return '' + val
@@ -171,7 +199,7 @@ export default {
     return {
       search: {
         name: '',
-        code: ''
+        parentId: 0
       },
       pager: {
         totalCount: 0,
@@ -182,8 +210,9 @@ export default {
       pageSizes: [10, 20, 40, 60, 100],
       listLoading: false, // 表格加载动画
       list: [], // 表格数据
+      treeList: [],
       dialogFormVisible: false,
-      dialogTitle: '新增角色',
+      dialogTitle: '新增字典',
       dialogWidth: '700px',
       pagerSetting: 'total, sizes, prev, pager, next, jumper',
       formData: { // 表单数据
@@ -191,15 +220,21 @@ export default {
         name: '',
         code: '',
         description: '',
-        menuIds: [],
-        resourceIds: []
+        sort: 0,
+        parentId: ''
       },
       rules: { // 表单校验规则
         name: validNotNull(),
         code: [{ required: true, message: '该项为必填项，请填写完整！' }, { validator: validNotCN, trigger: 'blur' }]
       },
       active: false,
-      hideFilter: false
+      hideFilter: false,
+      defaultSort: {
+        prop: 'createTime',
+        order: 'descending'
+      },
+      selectName: '',
+      treeFilterText: ''
     }
   },
   computed: {
@@ -224,12 +259,16 @@ export default {
         }
       },
       deep: true
+    },
+    treeFilterText(val, oldVal) {
+      this.$refs.leftTree.filter(val)
     }
   },
   created() {
     if (this.$store.state.app.device === 'mobile') {
       this.hideFilter = true
     }
+    this.rootTreeList()
     this.getList(true)
   },
   methods: {
@@ -258,8 +297,8 @@ export default {
         name: '',
         code: '',
         description: '',
-        menuIds: [],
-        resourceIds: []
+        parentId: this.search.parentId,
+        sort: 0
       }
       this.dialogTitle = '新增角色'
       this.dialogFormVisible = true
@@ -296,8 +335,8 @@ export default {
         name: row.name,
         code: row.code,
         description: row.description,
-        menuIds: row.menuIds,
-        resourceIds: row.resourceIds
+        parentId: row.parentId,
+        sort: row.sort
       }
       this.expandedNode = row.menuIds
       this.dialogFormVisible = true
@@ -334,7 +373,32 @@ export default {
         name: '',
         code: ''
       }
+      this.$refs.grid.clearSort()
       this.getList(true)
+    },
+    sortChange(field) {
+      if (field.order) {
+        this.search.orderWay = field.order
+        this.search.orderField = field.prop
+        this.getList(true)
+      }
+    },
+    rootTreeList() {
+      getRootList().then(res => {
+        if (res.code === 1) {
+          this.treeList = res.data
+        }
+      })
+    },
+    selectFilterNode(node) {
+      this.formData.parentId = node.id
+      this.search.parentId = node.id
+      this.selectName = node.label
+      this.getList(true)
+    },
+    filterNode(value, data) {
+      if (!value) return true
+      return data.label.indexOf(value) !== -1
     }
   }
 }

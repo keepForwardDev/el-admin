@@ -308,3 +308,10 @@ aside {
     position: absolute;
   }
 }
+
+.mobileCascader {
+  .el-cascader-menu {
+    max-width: 100px;
+    min-width: 0px;
+  }
+}

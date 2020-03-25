@@ -25,6 +25,7 @@
                   :data="treeList"
                   :filter-node-method="filterNode"
                   accordion
+                  :expand-on-click-node="false"
                   default-expand-all
                   highlight-current
                   @node-click="selectFilterNode"
@@ -59,6 +60,7 @@
               </el-form-item>
               <el-form-item label="所属部门" v-if="$store.state.app.device == 'mobile'">
                 <el-cascader
+                        popper-class="mobileCascader"
                         ref="departmentCascader"
                         v-model="deptValue"
                         style="width: 100%"
@@ -66,7 +68,11 @@
                         :options="treeList"
                         :props="cascaderProps"
                         clearable
-                />
+                >
+                  <template slot-scope="{ node, data }">
+                    <span :title="data.label">{{ data.label }}</span>
+                  </template>
+                </el-cascader>
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
@@ -102,6 +108,7 @@
           <!--       表格区                       -->
           <div class="table-content">
             <el-table
+                    ref="grid"
                     v-loading="listLoading"
                     :header-cell-class-name="headClass"
                     :data="list"
@@ -589,6 +596,7 @@ export default {
       this.search = {}
       this.keyword = ''
       this.keywordType = 'name'
+      this.$refs.grid.clearSort()
       if (this.$refs.leftTree && this.deptValue.length > 0) {
         this.$refs.leftTree.setCurrentKey(null)
         this.deptValue = []
@@ -665,6 +673,7 @@ export default {
     sortChange(field) {
       this.search.orderWay = field.order
       this.search.orderField = field.prop
+      this.getList(true)
     }
   }
 }
@@ -672,5 +681,9 @@ export default {
 <style scoped>
   .el-main {
     padding: 0;
+  }
+
+  .el-cascader-menu {
+    max-width: 10px;
   }
 </style>
