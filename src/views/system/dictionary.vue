@@ -42,6 +42,16 @@
               <el-form-item label="字典名称">
                 <el-input v-model="search.name" placeholder="请输入字典名称" />
               </el-form-item>
+              <el-form-item label="所属父级" v-if="$store.state.app.device == 'mobile'">
+                <el-select v-model="search.parentId" placeholder="请选择" style="width: 100%" clearable>
+                  <el-option
+                          v-for="item in treeList"
+                          :key="item.id"
+                          :label="item.label"
+                          :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
               <el-form-item>
                 <el-button type="primary" class="filter-item" size="small" @click="getList(true)">搜索</el-button>
                 <el-button class="filter-item" size="small" @click="resetQuery">重置</el-button>
@@ -62,7 +72,10 @@
           <div class="operation">
             <el-form :inline="true">
               <el-form-item>
-                <el-button type="primary" size="small" @click="showForm">新增</el-button>
+                <el-button type="primary" size="small" @click="showForm"  icon="el-icon-plus">新增</el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData()">批量删除</el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -76,10 +89,15 @@
                     :data="list"
                     fit
                     border
+                    @selection-change="handleSelectionChange"
                     style="width: 100%"
                     :default-sort="defaultSort"
                     @sort-change="sortChange"
             >
+              <el-table-column
+                      type="selection"
+                      width="55"
+              />
               <el-table-column
                       show-overflow-tooltip
                       prop="name"
@@ -101,7 +119,7 @@
                 </template>
               </el-table-column>
               <el-table-column
-                      prop="name"
+                      prop="sort"
                       align="center"
                       label="排序值"
               />
@@ -124,10 +142,12 @@
               <el-table-column
                       align="center"
                       label="操作"
-                      width="400"
+                      width="250"
               >
                 <template slot-scope="{row}">
                   <el-button type="primary" size="small" @click="editData(row)">编辑</el-button>
+                  <el-button type="primary" size="small" @click="enableRow(row, true)" v-if="!row.enabled">启用</el-button>
+                  <el-button size="small" @click="enableRow(row, false)" v-if="row.enabled">禁用</el-button>
                   <el-button type="danger" size="small" @click="deleteData(row)">删除</el-button>
                 </template>
               </el-table-column>
@@ -155,7 +175,10 @@
               <el-form-item label="名称" prop="name">
                 <el-input v-model="formData.name" />
               </el-form-item>
-              <el-form-item label="字典编码" prop="code">
+              <el-form-item label="所属父级" v-if="selectName">
+                <span>{{selectName}}</span>
+              </el-form-item>
+              <el-form-item label="字典编码" prop="code" v-if="!selectName">
                 <el-input v-model="formData.code" />
               </el-form-item>
               <el-form-item label="备注">
@@ -176,7 +199,7 @@
   </div>
 </template>
 <script>
-import { getList, getRootList, saveFormData, deleteData } from '@/api/system/dictionary'
+import { getList, getRootList, saveFormData, deleteData, enabledDictionary } from '@/api/system/dictionary'
 import { validNotNull, validNotCN } from '@/utils/validate'
 export default {
   name: 'dictionary',
@@ -199,7 +222,7 @@ export default {
     return {
       search: {
         name: '',
-        parentId: 0
+        parentId: ''
       },
       pager: {
         totalCount: 0,
@@ -233,6 +256,7 @@ export default {
         prop: 'createTime',
         order: 'descending'
       },
+      selection: [],
       selectName: '',
       treeFilterText: ''
     }
@@ -343,12 +367,18 @@ export default {
       this.dialogTitle = '编辑角色'
     },
     deleteData(row) {
+      let selection = []
+      if (row) {
+        selection.push(row.id)
+      } else {
+        selection = this.selection
+      }
       this.$confirm('确定删除吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteData(row.id).then(res => {
+        deleteData(selection, this.search.parentId).then(res => {
           if (res.code === 1) {
             this.$message({
               message: '删除成功！',
@@ -373,6 +403,11 @@ export default {
         name: '',
         code: ''
       }
+      if (this.selectName) {
+        this.$refs.leftTree.setCurrentKey(null)
+        this.search.parentId = ''
+      }
+      this.selectName = ''
       this.$refs.grid.clearSort()
       this.getList(true)
     },
@@ -383,12 +418,12 @@ export default {
         this.getList(true)
       }
     },
-    rootTreeList() {
-      getRootList().then(res => {
-        if (res.code === 1) {
-          this.treeList = res.data
-        }
-      })
+    handleSelectionChange(val) {
+      if (val.length > 0) {
+        this.selection = val.map(item => item.id)
+      } else {
+        this.selection = []
+      }
     },
     selectFilterNode(node) {
       this.formData.parentId = node.id
@@ -399,9 +434,37 @@ export default {
     filterNode(value, data) {
       if (!value) return true
       return data.label.indexOf(value) !== -1
+    },
+    rootTreeList() {
+      getRootList().then(res => {
+        if (res.code === 1) {
+          this.treeList = res.data
+        }
+      })
+    },
+    enableRow(row, flag) {
+      const tips = flag ? '启用' : '禁用'
+      this.$confirm(`确定${tips}吗？`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        enabledDictionary(row.id, flag).then(res => {
+          if (res.code === 1) {
+            this.getList(true)
+            this.$message({
+              type: 'success',
+              message: res.msg
+            })
+          }
+        })
+      })
     }
   }
 }
 </script>
 <style scoped>
+  .el-main {
+    padding: 0;
+  }
 </style>

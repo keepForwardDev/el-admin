@@ -97,7 +97,7 @@
                 <el-button type="primary" size="small" icon="el-icon-plus" @click="showForm">新增</el-button>
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData">批量删除</el-button>
+                <el-button type="primary" size="small" icon="el-icon-delete" :disabled="selection.length === 0" @click="deleteData()">批量删除</el-button>
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" size="small" icon="el-icon-refresh" :disabled="selection.length === 0" @click="resetPassword">密码重置</el-button>
@@ -233,6 +233,7 @@
               <el-form-item label="所属部门">
                 <el-tree
                         ref="groupTree1"
+                        :expand-on-click-node="false"
                         node-key="id"
                         :data="treeList"
                         :default-expanded-keys="expandedNode"

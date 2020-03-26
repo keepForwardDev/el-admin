@@ -26,11 +26,22 @@ export function saveFormData(data) {
   })
 }
 
-export function deleteData(data) {
-  const url = '/dictionary/delete/'
+export function deleteData(data, parentId) {
+  let url = '/dictionary/delete/'
+  if (parentId) {
+    url += '?parentId=' + parentId
+  }
   return request({
     url: url,
     method: 'post',
     data
+  })
+}
+
+export function enabledDictionary(id, enable) {
+  const url = '/dictionary/enabled/' + id + '?enable=' + enable
+  return request({
+    url: url,
+    method: 'get'
   })
 }
